@@ -17,11 +17,11 @@ const registerInformation = {
       flag: "s"
     },
     {
-      subName: "_xy",
+      subName: "_xz",
       args: [
         {
           name: "coordinates",
-          type: "xy",
+          type: "xz",
           default: new CommandPosition()
         }
       ]
@@ -57,7 +57,7 @@ function setSelection(session: PlayerSession, chunks: [Vector3, Vector3], useHei
 registerCommand(registerInformation, function (session, builder, args) {
   const useChunkCoordinates = args.has("c");
   const expandSelection = args.has("s");
-  const useHeightLimits = args.has("_xy");
+  const useHeightLimits = args.has("_xz");
   const coordinates = args.get("coordinates") as CommandPosition;
 
   if (expandSelection) {
