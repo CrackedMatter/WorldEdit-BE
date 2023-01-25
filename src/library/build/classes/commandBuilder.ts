@@ -262,7 +262,7 @@ export class CommandBuilder {
 
         idx++;
         result.set(def.name, val);
-      } else if(def.type == "xy") {
+      } else if(def.type == "xz") {
         const parse = CommandPosition.parseArgs(args, idx, false);
         idx = parse.argIndex;
         result.set(def.name, parse.result);
