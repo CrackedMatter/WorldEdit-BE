@@ -62,7 +62,7 @@ registerCommand(registerInformation, function (session, builder, args) {
     result.append("translate", "commands.wedit:size.blocks").with(`${blockCount}`);
     return result;
   }
-    
+
   if (!session.hasToolProperty(null, "brush")) {
     session.bindTool("brush", null, createDefaultBrush());
   }
