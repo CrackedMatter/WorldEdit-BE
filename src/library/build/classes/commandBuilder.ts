@@ -373,7 +373,13 @@ export class CommandBuilder {
                 }, result);
               }
             } else {
-              throw RawText.translate("commands.generic.wedit:invalidFlag").with(f);
+              // TODO: Make flags work with unnamed subcommands
+
+              // temporary workaround
+              result.set(f, false);
+              contentLog.warn(`invalid flag ${f}`);
+
+              // throw RawText.translate("commands.generic.wedit:invalidFlag").with(f);
             }
           }
           continue;
