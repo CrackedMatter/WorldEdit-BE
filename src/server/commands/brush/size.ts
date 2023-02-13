@@ -32,7 +32,7 @@ const registerInformation = {
 
 registerCommand(registerInformation, function (session, builder, args) {
   if (args.has("_selection") {
-    const result = new RawText();
+    const message = new RawText();
     let size: Vector;
     let blockCount: number;
 
@@ -42,7 +42,7 @@ registerCommand(registerInformation, function (session, builder, args) {
       size = Vector.from(session.clipboard.getSize());
       blockCount = session.clipboard.getBlockCount();
 
-      result.append("translate", "commands.wedit:size.offset").with(`${session.clipboardTransform.relative}\n`);
+      message.append("translate", "commands.wedit:size.offset").with(`${session.clipboardTransform.relative}\n`);
 
     } else {
       assertSelection(session);
@@ -52,15 +52,15 @@ registerCommand(registerInformation, function (session, builder, args) {
       size = Vector.sub(end, start).add(1);
       blockCount = session.selection.getBlockCount();
 
-      result.append("translate", "commands.wedit:size.type").with(`${session.selection.mode}\n`);
-      result.append("translate", "commands.wedit:size.pos1").with(`${pos1}\n`);
-      result.append("translate", "commands.wedit:size.pos2").with(`${pos2}\n`);
+      message.append("translate", "commands.wedit:size.type").with(`${session.selection.mode}\n`);
+      message.append("translate", "commands.wedit:size.pos1").with(`${pos1}\n`);
+      message.append("translate", "commands.wedit:size.pos2").with(`${pos2}\n`);
     }
 
-    result.append("translate", "commands.wedit:size.size").with(`${size}\n`);
-    result.append("translate", "commands.wedit:size.distance").with(`${size.sub(1).length}\n`);
-    result.append("translate", "commands.wedit:size.blocks").with(`${blockCount}`);
-    return result;
+    message.append("translate", "commands.wedit:size.size").with(`${size}\n`);
+    message.append("translate", "commands.wedit:size.distance").with(`${size.sub(1).length}\n`);
+    message.append("translate", "commands.wedit:size.blocks").with(`${blockCount}`);
+    return message;
   }
 
   if (!session.hasToolProperty(null, "brush")) {
