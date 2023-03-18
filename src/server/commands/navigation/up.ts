@@ -11,7 +11,7 @@ const registerInformation = {
     {
       name: "height",
       type: "int",
-      range: [1, null] as [number, null]
+      range: [0, null] as [number, null]
     }
   ]
 };
@@ -28,7 +28,8 @@ registerCommand(registerInformation, function (session, builder, args) {
   }
 
   const rot = builder.getRotation();
+  const block = dimension.getBlock(blockLoc.offset(0, -1, 0));
   builder.teleport(blockLoc.offset(0.5, 0, 0.5), dimension, rot.x, rot.y);
-  dimension.getBlock(blockLoc.offset(0, -1, 0)).setType(MinecraftBlockTypes.glass);
+  if (block.isAir()) block.setType(MinecraftBlockTypes.glass);
   return RawText.translate("commands.wedit:up.explain");
 });
