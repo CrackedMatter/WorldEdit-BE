@@ -28,7 +28,6 @@ const registerInformation = {
 
 function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): Generator<string | number, number> {
   const [min, max] = session.selection.getRange();
-
   const dimension = session.getPlayer().dimension;
 
   const history = session.getHistory();
