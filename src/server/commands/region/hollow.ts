@@ -54,8 +54,8 @@ function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): G
       while (queue.length != 0) {
         const loc = queue.shift();
         const locString = locToString(loc);
-        if (!locStringSet.has(locString)) continue;
         yield progress / volume;
+        if (!locStringSet.has(locString)) continue;
         progress++;
         if (!Server.block.isAirOrFluid(dimension.getBlock(loc).permutation)) continue;
         locStringSet.delete(locString);
@@ -69,7 +69,7 @@ function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): G
       const surface: string[] = [];
       outer: for (const locString of locStringSet) {
         yield progress / volume;
-        progress += 0.5;
+        progress += 0.5 / thickness;
         for (const offset of [[0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as [number, number, number][]) {
           if (!locStringSet.has(locToString(stringToLoc(locString).add(offset)))) {
             surface.push(locString);
@@ -79,7 +79,7 @@ function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): G
       }
       for (const locString of surface) {
         if (iterateChunk()) yield progress / volume;
-        progress += 0.5;
+        progress += 0.5 / thickness;
         locStringSet.delete(locString);
       }
     }
