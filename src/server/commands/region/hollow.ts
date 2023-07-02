@@ -1,8 +1,10 @@
-import { Dimension, Vector3 } from "@minecraft/server";
+import { Vector3 } from "@minecraft/server";
 import { assertSelection, assertCanBuildWithin } from "@modules/assert.js";
+import { Jobs } from "@modules/jobs.js";
 import { Pattern } from "@modules/pattern.js";
-import { Server, RawText, Vector } from "@notbeer-api";
+import { Server, RawText, Vector, iterateChunk, regionVolume } from "@notbeer-api";
 import { locToString, stringToLoc } from "server/util.js";
+import { PlayerSession } from "server/sessions.js";
 import { registerCommand } from "../register_commands.js";
 
 const registerInformation = {
@@ -24,60 +26,82 @@ const registerInformation = {
   ]
 };
 
-function* hollow(dim: Dimension, blocks: Generator<Vector3>, outerBlocks: Generator<Vector3>, thickness: number): Generator<unknown, Set<string>> {
-  const pointSet: Set<string> = new Set();
-  for (const loc of blocks) {
-    pointSet.add(locToString(loc));
-    yield;
-  }
+function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): Generator<string | number, number> {
+  const [min, max] = session.selection.getRange();
 
-  const recurseDirections: Vector[] = [
-    new Vector(0, 1, 0),
-    new Vector(0, -1, 0),
-    new Vector(0, 0, -1),
-    new Vector(0, 0, 1),
-    new Vector(1, 0, 0),
-    new Vector(-1, 0, 0)
-  ];
+  const dimension = session.getPlayer().dimension;
 
-  function* recurseHollow(origin: Vector3): Generator {
-    const queue: Vector3[] = [origin];
-    while (queue.length != 0) {
-      const loc = queue.shift();
-      const locString = locToString(loc);
-      if (!pointSet.has(locString) || !Server.block.isAirOrFluid(dim.getBlock(loc).permutation)) {
-        yield;
-        continue;
-      }
-      pointSet.delete(locString);
-      for (const recurseDirection of recurseDirections) {
-        queue.push(Vector.add(loc, recurseDirection));
-      }
-      yield;
+  const history = session.getHistory();
+  const record = history.record();
+
+  try {
+    let count = 0;
+    let progress = 0;
+    let volume = regionVolume(min, max);
+    yield "Calculating shape...";
+    const locStringSet: Set<string> = new Set();
+    for (const loc of session.selection.getBlocks()) {
+      if (iterateChunk()) yield progress / volume;
+      progress++;
+      locStringSet.add(locToString(loc));
     }
-  }
 
-  for (const loc of outerBlocks) {
-    yield* recurseHollow(loc);
-  }
-
-  for (let i = 1; i <= thickness; i++) {
-    const surface = [];
-    outer: for (const point of pointSet) {
-      for (const recurseDirection of recurseDirections) {
-        if (!pointSet.has(locToString(stringToLoc(point).add(recurseDirection)))) {
-          surface.push(point);
-          yield;
-          continue outer;
+    progress = 0;
+    volume = locStringSet.size;
+    yield "Calculating blocks...";
+    for (const loc of session.selection.getBlocks({ hollow: true })) {
+      const queue: Vector3[] = [loc];
+      while (queue.length != 0) {
+        const loc = queue.shift();
+        const locString = locToString(loc);
+        if (!locStringSet.has(locString)) continue;
+        yield progress / volume;
+        progress++;
+        if (!Server.block.isAirOrFluid(dimension.getBlock(loc).permutation)) continue;
+        locStringSet.delete(locString);
+        for (const offset of [[0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as [number, number, number][]) {
+          queue.push(Vector.add(loc, offset));
         }
       }
-      yield;
     }
-    surface.forEach(point => pointSet.delete(point));
-    yield;
-  }
 
-  return pointSet;
+    for (let i = 1; i <= thickness; i++) {
+      const surface: string[] = [];
+      outer: for (const locString of locStringSet) {
+        yield progress / volume;
+        progress += 0.5;
+        for (const offset of [[0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as [number, number, number][]) {
+          if (!locStringSet.has(locToString(stringToLoc(locString).add(offset)))) {
+            surface.push(locString);
+            continue outer;
+          }
+        }
+      }
+      for (const locString of surface) {
+        if (iterateChunk()) yield progress / volume;
+        progress += 0.5;
+        locStringSet.delete(locString);
+      }
+    }
+
+    progress = 0;
+    volume = locStringSet.size;
+    yield "Generating blocks...";
+    history.addUndoStructure(record, min, max);
+    for (const locString of locStringSet) {
+      const block = dimension.getBlock(stringToLoc(locString));
+      if (session.globalMask.matchesBlock(block) && pattern.setBlock(block)) count++;
+      if (iterateChunk()) yield progress / volume;
+      progress++;
+    }
+    history.recordSelection(record, session);
+    history.addRedoStructure(record, min, max);
+    history.commit(record);
+    return count;
+  } catch (e) {
+    history.cancel(record);
+    throw e;
+  }
 }
 
 registerCommand(registerInformation, function* (session, builder, args) {
@@ -87,36 +111,11 @@ registerCommand(registerInformation, function* (session, builder, args) {
     throw RawText.translate("worldEdit.selectionFill.noPattern");
   }
 
-  const dim = builder.dimension;
   const pattern: Pattern = args.get("_using_item") ? session.globalPattern : args.get("pattern");
   const thickness = args.get("thickness") as number;
 
-  const blocks: Generator<Vector3> = session.selection.getBlocks();
-  const outerBlocks: Generator<Vector3> = session.selection.getBlocks({ hollow: true });
-  const [start, end]: [Vector3, Vector3] = session.selection.getRange();
-
-  const history = session.getHistory();
-  const record = history.record();
-  let count: number;
-  try {
-    const pointSet = (yield* hollow(dim, blocks, outerBlocks, thickness));
-    history.addUndoStructure(record, start, end);
-    count = 0;
-    for (const locString of pointSet) {
-      const block = dim.getBlock(stringToLoc(locString));
-      if (session.globalMask.matchesBlock(block) && pattern.setBlock(block)) {
-        count++;
-      }
-      yield;
-    }
-
-    history.recordSelection(record, session);
-    history.addRedoStructure(record, start, end);
-    history.commit(record);
-  } catch (e) {
-    history.cancel(record);
-    throw e;
-  }
-
+  const job = Jobs.startJob(session, 3, session.selection.getRange());
+  const count = yield* Jobs.perform(job, hollow(session, pattern, thickness));
+  Jobs.finishJob(job);
   return RawText.translate("commands.blocks.wedit:changed").with(`${count}`);
 });
