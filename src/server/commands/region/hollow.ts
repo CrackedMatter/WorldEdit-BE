@@ -32,7 +32,6 @@ function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): G
 
   const history = session.getHistory();
   const record = history.record();
-
   try {
     let count = 0;
     let progress = 0;
