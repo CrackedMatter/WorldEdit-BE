@@ -112,6 +112,8 @@ registerCommand(registerInformation, function* (session, builder, args) {
     [start, end] = session.selection.getRange();
   }
 
+  pattern.setContext(session, [start, end]);
+
   const history = session.getHistory();
   const record = history.record();
   let count: number;

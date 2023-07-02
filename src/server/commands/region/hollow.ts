@@ -30,6 +30,8 @@ function* hollow(session: PlayerSession, pattern: Pattern, thickness: number): G
   const [min, max] = session.selection.getRange();
   const dimension = session.getPlayer().dimension;
 
+  pattern.setContext(session, [min, max]);
+
   const history = session.getHistory();
   const record = history.record();
   try {
