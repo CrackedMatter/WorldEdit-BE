@@ -32,6 +32,11 @@ export class BlockBuilder {
     const type = block.type.id;
     return type == "minecraft:air" || type == "minecraft:water" || type == "minecraft:lava";
   }
+
+  getDataValueCount(block: string): number {
+    if (!(block in dataToStates)) return 0;
+    return dataToStates[block].length;
+  }
 }
 export const Block = new BlockBuilder();
 
