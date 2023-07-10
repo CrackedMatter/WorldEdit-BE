@@ -156,7 +156,7 @@ async function fillDataMap(loc: Vector, dim: Dimension) {
     }
 }
 
-const dataToItem: {[key: string]: ItemStack[]} {
+const dataToItem: {[key: string]: ItemStack[]} = {
   "minecraft:waxed_cut_copper_slab": [],
   "minecraft:cobbled_deepslate_slab": [],
   "minecraft:fence": [],
