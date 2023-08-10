@@ -31,9 +31,7 @@ export class BlockBuilder {
     const block = item.typeId;
     if (!itemsWithData.includes(block)) return 0;
     for (let i = 0; i < dataToStates[block].length; i++) {
-      if (BlockPermutation.resolve(block, dataToStates[block][i]).getItemStack().isStackableWith(item)) {
-        return i;
-      }
+      if (this.dataValueToPermutation(block, i).getItemStack().isStackableWith(item)) return i;
     }
     return 0;
   }
