@@ -26,5 +26,17 @@ class BlockReplacerTool extends Tool {
     super();
     this.pattern = pattern;
   }
+
+  toJSON() {
+    return {
+      type: this.type,
+      pattern: this.pattern.getSource()
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static parseJSON(json: {[key: string]: any}) {
+    return [new Pattern(json.pattern)];
+  }
 }
 Tools.register(BlockReplacerTool, "replacer_wand");
