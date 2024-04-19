@@ -1,6 +1,7 @@
 import { PlayerUtil } from "@modules/player_util.js";
 import { RawText } from "@notbeer-api";
 import { registerCommand } from "../register_commands.js";
+import { MinecraftBlockTypes } from "@minecraft/server";
 
 const registerInformation = {
   name: "up",
@@ -28,6 +29,6 @@ registerCommand(registerInformation, function (session, builder, args) {
 
   const block = dimension.getBlock(blockLoc.offset(0, -1, 0));
   builder.teleport(blockLoc.offset(0.5, 0, 0.5), { dimension });
-  if (block.isAir) block.setType("minecraft:glass");
+  if (block.isAir) block.setType(MinecraftBlockTypes.glass);
   return RawText.translate("commands.wedit:up.explain");
 });

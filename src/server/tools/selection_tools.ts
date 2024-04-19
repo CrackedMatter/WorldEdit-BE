@@ -7,7 +7,9 @@ import { Server } from "@notbeer-api";
 class SelectionTool extends Tool {
   permission = "worldedit.selection.pos";
   useOn = function (self: Tool, player: Player, session: PlayerSession, loc: Vector3) {
-    Server.command.callCommand(player, "pos2", [`${loc.x}`, `${loc.y}`, `${loc.z}`]);
+    Server.command.callCommand(player, player.isSneaking ? "pos1" : "pos2",
+      [`${loc.x}`, `${loc.y}`, `${loc.z}`]
+    );
   };
   break = function (self: Tool, player: Player, session: PlayerSession, loc: Vector3) {
     Server.command.callCommand(player, "pos1", [`${loc.x}`, `${loc.y}`, `${loc.z}`]);

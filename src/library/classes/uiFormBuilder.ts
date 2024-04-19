@@ -69,7 +69,8 @@ class MessageUIForm<T extends {}> extends UIForm<T> {
   }
 
   enter(player: Player, ctx: MenuContext<T>) {
-    this.buildFormData(player, ctx).show(player).then((response: MessageFormResponse) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.buildFormData(player, ctx).show(player as any).then((response: MessageFormResponse) => {
       if (this.handleCancel(response, player, ctx)) {
         return;
       }
@@ -104,7 +105,8 @@ class ActionUIForm<T extends {}> extends UIForm<T> {
   async enter(player: Player, ctx: MenuContext<T>) {
     const form = this.buildFormData(player, ctx);
     const actions = this.actions;
-    form.show(player).then((response: ActionFormResponse) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form.show(player as any).then((response: ActionFormResponse) => {
       if (this.handleCancel(response, player, ctx)) {
         return;
       }
@@ -160,7 +162,8 @@ class ModalUIForm<T extends {}> extends UIForm<T> {
   enter(player: Player, ctx: MenuContext<T>) {
     const form = this.buildFormData(player, ctx);
     const inputNames = this.inputNames;
-    form.show(player).then((response: ModalFormResponse) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form.show(player as any).then((response: ModalFormResponse) => {
       if (this.handleCancel(response, player, ctx)) {
         return;
       }

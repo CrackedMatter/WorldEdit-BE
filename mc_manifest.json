@@ -4,8 +4,8 @@
 		"bp_name": "WorldEdit Bedrock Edition",
 		"rp_name": "WorldEdit Bedrock Edition [RES]",
 		"description": "pack.description",
-		"bp_uuid": "3cdb2ddf-662e-4f8f-a0a1-1293b91ccb2f",
-		"rp_uuid": "e304a4eb-f0a0-4979-ac17-7b0f46a555c8",
+		"bp_uuid": "9bd0a036-a560-4d6d-999c-5e134cd745ae",
+		"rp_uuid": "aea3c1be-bd2e-4268-ba63-2ece615a6fbd",
 		"version": [
 			0,
 			8,
@@ -14,14 +14,14 @@
 		"min_engine_version": [
 			1,
 			20,
-			70
+			10
 		]
 	},
 	"bp_modules": [
 		{
 			"description": "item and entity definitions",
 			"type": "data",
-			"uuid": "f0bc63f7-f2b2-4de2-a27c-6a3d5ac7cee4",
+			"uuid": "8a913edf-0331-46df-9316-d2b140a65c9f",
 			"version": [
 				1,
 				0,
@@ -32,7 +32,7 @@
 			"description": "scripts",
 			"type": "script",
 			"language": "javascript",
-			"uuid": "7f97c5a5-a9ec-4773-b29f-a26e0f653ee2",
+			"uuid": "ebb567b9-399c-4a77-86f0-066af5ddb274",
 			"version": [
 				1,
 				0,
@@ -47,7 +47,7 @@
 	"rp_modules": [
 		{
 			"type": "resources",
-			"uuid": "f58139e1-2378-434d-91e8-9861d5579c7c",
+			"uuid": "a56a0b12-b0fb-4a13-8281-cc655354907b",
 			"version": [
 				1,
 				0,
@@ -58,7 +58,7 @@
 	"bp_dependencies": [
 		{
 			"module_name": "@minecraft/server",
-			"version": "1.10.0-beta"
+			"version": "1.4.0-beta"
 		},
 		{
 			"module_name": "@minecraft/server-ui",

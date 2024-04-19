@@ -293,7 +293,7 @@ class SurfaceMask extends MaskNode {
     const loc = Vector.from(block.location);
     const dim = block.dimension;
     const isEmpty = (loc: Vector3) => {
-      return dim.getBlock(loc).isAir;
+      return dim.getBlock(loc).isAir();
     };
 
     return !isEmpty(loc) && (

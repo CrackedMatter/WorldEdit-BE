@@ -1,4 +1,4 @@
-import { Player, ItemStack, ItemUseBeforeEvent, world, PlayerBreakBlockBeforeEvent, EntityHitBlockAfterEvent } from "@minecraft/server";
+import { Player, ItemStack, ItemUseBeforeEvent, world, BlockBreakAfterEvent, EntityHitBlockAfterEvent } from "@minecraft/server";
 import { contentLog, Server, sleep, Thread, Vector, Database } from "@notbeer-api";
 import { Tool, ToolAction } from "./base_tool.js";
 import { PlayerSession, getSession, hasSession } from "../sessions.js";
@@ -31,8 +31,9 @@ class ToolBuilder {
     });
 
     Server.on("blockBreak", ev => {
-      if (!ev.itemStack || !hasSession(ev.player.id)) return;
-      this.onBlockBreak(ev.itemStack, ev.player, ev, Vector.from(ev.block));
+      const itemStack = Server.player.getHeldItem(ev.player);
+      if (!itemStack || !hasSession(ev.player.id)) return;
+      this.onBlockBreak(itemStack, ev.player, ev, Vector.from(ev.block));
     });
 
     Server.on("blockHit", ev => {
@@ -220,7 +221,7 @@ class ToolBuilder {
     }
   }
 
-  private onBlockBreak(item: ItemStack, player: Player, ev: PlayerBreakBlockBeforeEvent, loc: Vector) {
+  private onBlockBreak(item: ItemStack, player: Player, ev: BlockBreakAfterEvent, loc: Vector) {
     if (this.disabled.includes(player.id)) {
       return;
     }
@@ -238,7 +239,7 @@ class ToolBuilder {
     }
 
     if (tool.process(getSession(player), this.currentTick, ToolAction.BREAK, loc)) {
-      ev.cancel = true;
+      ev.block.setPermutation(ev.brokenBlockPermutation);
     }
   }
 

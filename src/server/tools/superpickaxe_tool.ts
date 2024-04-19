@@ -1,4 +1,4 @@
-import { Dimension, Player, Vector3 } from "@minecraft/server";
+import { Dimension, MinecraftBlockTypes, Player, Vector3 } from "@minecraft/server";
 import { PlayerSession } from "../sessions.js";
 import { Tool } from "./base_tool.js";
 import { Tools } from "./tool_manager.js";
@@ -71,6 +71,6 @@ function destroyBlock(dimension: Dimension, loc: Vector3, drop: boolean) {
   if (drop) {
     Server.runCommand(`setblock ${loc.x} ${loc.y} ${loc.z} air destroy`, dimension);
   } else {
-    dimension.getBlock(loc).setType("minecraft:air");
+    dimension.getBlock(loc).setType(MinecraftBlockTypes.air);
   }
 }
