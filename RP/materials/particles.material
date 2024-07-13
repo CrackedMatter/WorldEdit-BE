@@ -1,0 +1,10 @@
+{
+    "materials": {
+        "version": "1.0.0",
+        "wedit_particles_blend_culled:particles_blend": {
+            "-states": [
+                "DisableCulling"
+            ]
+        }
+    }
+}

@@ -1,3 +1,4 @@
+import { MolangVariableMap, Player } from "@minecraft/server";
 import { Shape, shapeGenOptions, shapeGenVars } from "./base_shape.js";
 import { Vector } from "@notbeer-api";
 
@@ -37,12 +38,33 @@ export class SphereShape extends Shape {
         throw new Error("getYRange not implemented!");
     }
 
-    public getOutline(loc: Vector) {
-        // TODO: Support oblique spheres
-        const maxRadius = Math.max(...this.radii) + 0.5;
-        return [...this.drawCircle(loc, maxRadius, "x"), ...this.drawCircle(loc, maxRadius, "y"), ...this.drawCircle(loc, maxRadius, "z")];
-    }
+    public draw(loc: Vector, player: Player, global?: boolean): void {
+        const dimension = player.dimension;
+        try {
+            loc = loc.add(0.5);
+            const spawnAt = Vector.add(player.getHeadLocation(), Vector.from(player.getViewDirection()).mul(20));
+            spawnAt.y = Math.min(Math.max(spawnAt.y, dimension.heightRange.min), dimension.heightRange.max);
+            const molangVars = new MolangVariableMap();
+            molangVars.setVector3("offset", Vector.sub(loc, spawnAt));
 
+            if (this.domeDirection) {
+                // Dome
+                molangVars.setVector3("direction", this.domeDirection);
+                molangVars.setFloat("radius", this.radii[0] + 0.5);
+                (global ? dimension : player).spawnParticle("wedit:wireframe_dome", spawnAt, molangVars);
+            } else if (!(this.radii[0] === this.radii[1] && this.radii[1] === this.radii[2])) {
+                // Ellipsoid
+                molangVars.setVector3("radii", { x: this.radii[0] + 0.5, y: this.radii[1] + 0.5, z: this.radii[2] + 0.5 });
+                (global ? dimension : player).spawnParticle("wedit:wireframe_ellipsoid", spawnAt, molangVars);
+            } else {
+                // Sphere
+                molangVars.setFloat("radius", this.radii[0] + 0.5);
+                (global ? dimension : player).spawnParticle("wedit:wireframe_sphere", spawnAt, molangVars);
+            }
+        } catch {
+            /* pass */
+        }
+    }
     protected prepGeneration(genVars: shapeGenVars, options?: shapeGenOptions) {
         genVars.isHollow = options?.hollow ?? false;
         genVars.radiiOff = this.radii.map((v) => v + 0.5);

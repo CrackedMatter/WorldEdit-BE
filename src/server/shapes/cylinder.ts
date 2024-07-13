@@ -1,3 +1,4 @@
+import { MolangVariableMap, Player } from "@minecraft/server";
 import { Shape, shapeGenOptions, shapeGenVars } from "./base_shape.js";
 import { Vector, axis } from "@notbeer-api";
 
@@ -36,28 +37,22 @@ export class CylinderShape extends Shape {
         return lX * lX + lZ * lZ > 1.0 ? null : <[number, number]>[-this.height / 2, this.height - 1 - this.height / 2];
     }
 
-    public getOutline(loc: Vector) {
-        // TODO: Support oblique cylinders and different axes.
-        loc = loc.offset(0, -this.height / 2, 0).ceil();
-        const locWithOffset = loc.offset(0.5, 0, 0.5);
-        const maxRadius = Math.max(...this.radii) + 0.5;
-        const vertices = [
-            locWithOffset.add([-maxRadius, 0, 0]),
-            locWithOffset.add([-maxRadius, this.height, 0]),
-            locWithOffset.add([maxRadius, 0, 0]),
-            locWithOffset.add([maxRadius, this.height, 0]),
-            locWithOffset.add([0, 0, -maxRadius]),
-            locWithOffset.add([0, this.height, -maxRadius]),
-            locWithOffset.add([0, 0, maxRadius]),
-            locWithOffset.add([0, this.height, maxRadius]),
-        ];
-        const edges: [number, number][] = [
-            [0, 1],
-            [2, 3],
-            [4, 5],
-            [6, 7],
-        ];
-        return [...this.drawCircle(loc.sub([0, 0.5, 0]), maxRadius, "y"), ...this.drawCircle(loc.sub([0, 0.5, 0]).add([0, this.height, 0]), maxRadius, "y"), ...this.drawShape(vertices, edges)];
+    public draw(loc: Vector, player: Player, global?: boolean): void {
+        const dimension = player.dimension;
+
+        // TODO: Support oblique cylinders
+        try {
+            loc = loc.add(new Vector(0.5, (this.height % 2) * 0.5, 0.5));
+            const spawnAt = Vector.add(player.getHeadLocation(), Vector.from(player.getViewDirection()).mul(20));
+            spawnAt.y = Math.min(Math.max(spawnAt.y, dimension.heightRange.min), dimension.heightRange.max);
+            const molangVars = new MolangVariableMap();
+            molangVars.setFloat("radius", this.radii[0] + 0.5);
+            molangVars.setVector3("offset", Vector.sub(loc, spawnAt));
+            molangVars.setFloat("height", this.height);
+            (global ? dimension : player).spawnParticle("wedit:wireframe_cylinder", spawnAt, molangVars);
+        } catch {
+            /* pass */
+        }
     }
 
     protected prepGeneration(genVars: shapeGenVars, options?: shapeGenOptions) {

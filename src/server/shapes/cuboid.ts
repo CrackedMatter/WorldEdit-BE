@@ -1,3 +1,4 @@
+import { MolangVariableMap, Player } from "@minecraft/server";
 import { Shape, shapeGenOptions, shapeGenVars } from "./base_shape.js";
 import { Vector } from "@notbeer-api";
 
@@ -19,35 +20,21 @@ export class CuboidShape extends Shape {
         return <[number, number]>[0, this.size[1] - 1];
     }
 
-    public getOutline(loc: Vector) {
-        const min = loc;
-        const max = loc.add(this.size);
-
-        const vertices = [
-            new Vector(min.x, min.y, min.z),
-            new Vector(max.x, min.y, min.z),
-            new Vector(min.x, max.y, min.z),
-            new Vector(max.x, max.y, min.z),
-            new Vector(min.x, min.y, max.z),
-            new Vector(max.x, min.y, max.z),
-            new Vector(min.x, max.y, max.z),
-            new Vector(max.x, max.y, max.z),
-        ];
-        const edges: [number, number][] = [
-            [0, 1],
-            [2, 3],
-            [4, 5],
-            [6, 7],
-            [0, 2],
-            [1, 3],
-            [4, 6],
-            [5, 7],
-            [0, 4],
-            [1, 5],
-            [2, 6],
-            [3, 7],
-        ];
-        return this.drawShape(vertices, edges);
+    public draw(loc: Vector, player: Player, global?: boolean): void {
+        const dimension = player.dimension;
+        try {
+            const size = Vector.from(this.size);
+            const spawnAt = Vector.add(player.getHeadLocation(), Vector.from(player.getViewDirection()).mul(20));
+            spawnAt.y = Math.min(Math.max(spawnAt.y, dimension.heightRange.min), dimension.heightRange.max);
+            const molangVars = new MolangVariableMap();
+            molangVars.setFloat("alpha_selection", 0.1);
+            molangVars.setFloat("alpha_background", 0.2);
+            molangVars.setVector3("offset", Vector.sub(loc, spawnAt).add(size.mul(0.5)));
+            molangVars.setVector3("size", size);
+            (global ? dimension : player).spawnParticle("wedit:selection_cuboid", spawnAt, molangVars);
+        } catch {
+            /* pass */
+        }
     }
 
     protected prepGeneration(genVars: shapeGenVars, options?: shapeGenOptions) {

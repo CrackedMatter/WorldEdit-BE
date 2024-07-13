@@ -1,0 +1,256 @@
+{
+    "format_version": "1.10.0",
+    "particle_effect": {
+        "description": {
+            "identifier": "wedit:selection",
+            "basic_render_parameters": {
+                "material": "particles_opaque",
+                "texture": "textures/particle/white"
+            }
+        },
+        "components": {
+            "minecraft:emitter_initialization": {
+                "creation_expression": "v.default_clr.r = 1; v.default_clr.g = 1; v.default_clr.b = 1; v.color = v.color??v.default_clr; v.default_clr.r = 1; v.default_clr.g = 1; v.default_clr.b = 1; v.edge_color = v.edge_color??v.default_clr; v.alpha_selection = v.alpha_selection??0.2; v.alpha_background = v.alpha_background??0.5; v.line_width = 1/32; v.volume_margin = 1/32; v.default_xyz.x = 1; v.default_xyz.y = 1; v.default_xyz.z = 1; v.size = v.size??v.default_xyz; v.default_xyz.x = 0; v.default_xyz.y = 0; v.default_xyz.z = 0; v.offset = v.offset??v.default_xyz;"
+            },
+            "minecraft:emitter_rate_instant": {
+                "num_particles": 1
+            },
+            "minecraft:emitter_lifetime_expression": {
+                "max_lifetime": 0
+            },
+            "minecraft:particle_lifetime_expression": {
+                "expiration_expression": "v.expire ?? 0"
+            },
+            "minecraft:particle_appearance_billboard": {
+                "size": [
+                    0,
+                    0
+                ]
+            },
+            "minecraft:particle_lifetime_events": {
+                "timeline": {
+                    "0": [
+                        "emit",
+                        "END"
+                    ]
+                }
+            }
+        },
+        "events": {
+            // This event should trigger last.
+            "END": {
+                "expression": "v.expire = 1;"
+            },
+            // Timeline events.
+            "emit": {
+                "sequence": [
+                    {
+                        "expression": "t.o = v.volume_margin; t.x = v.size.x/2+t.o; t.y = v.size.y/2+t.o; t.z = v.size.z/2+t.o; t.r=v.color.r; t.g=v.color.g; t.b=v.color.b; t.a=v.alpha_selection; t.ox = v.offset.x; t.oy = v.offset.y; t.oz = v.offset.z;"
+                    },
+                    // Front side
+                    {
+                        // +X
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox+t.x; v.y = t.oy; v.z = t.oz; v.dir_x=1; v.size_x=t.z; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // -X
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox-t.x; v.y = t.oy; v.z = t.oz; v.dir_x=-1; v.size_x=t.z; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // +Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy+t.y; v.z = t.oz; v.dir_y=-1; v.size_x=t.x; v.size_y=t.z;"
+                        }
+                    },
+                    {
+                        // -Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy-t.y; v.z = t.oz; v.dir_y=1; v.size_x=t.x; v.size_y=t.z;"
+                        }
+                    },
+                    {
+                        // +Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy; v.z = t.oz+t.z; v.dir_z=1; v.size_x=t.x; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // -Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy; v.z = t.oz-t.z; v.dir_z=-1; v.size_x=t.x; v.size_y=t.y;"
+                        }
+                    },
+                    // Back side
+                    {
+                        // Calculate alpha for second layer such that combined alpha of both layers equals to v.alpha_background
+                        "expression": "t.a=math.clamp((v.alpha_selection-v.alpha_background)/(v.alpha_selection-1), 0, 1);"
+                    },
+                    {
+                        // +X
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox+t.x; v.y = t.oy; v.z = t.oz; v.dir_x=-1; v.size_x=t.z; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // -X
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox-t.x; v.y = t.oy; v.z = t.oz; v.dir_x=1; v.size_x=t.z; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // +Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy+t.y; v.z = t.oz; v.dir_y=1; v.size_x=t.x; v.size_y=t.z;"
+                        }
+                    },
+                    {
+                        // -Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy-t.y; v.z = t.oz; v.dir_y=-1; v.size_x=t.x; v.size_y=t.z;"
+                        }
+                    },
+                    {
+                        // +Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy; v.z = t.oz+t.z; v.dir_z=-1; v.size_x=t.x; v.size_y=t.y;"
+                        }
+                    },
+                    {
+                        // -Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_plane",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.a=t.a; v.x = t.ox; v.y = t.oy; v.z = t.oz-t.z; v.dir_z=1; v.size_x=t.x; v.size_y=t.y;"
+                        }
+                    },
+                    // Edges
+                    {
+                        "expression": "t.w=v.line_width; t.edge_offset = t.w/math.sqrt(2); t.x = t.x+t.edge_offset; t.y = t.y+t.edge_offset; t.z = t.z+t.edge_offset; t.r=v.edge_color.r; t.g=v.edge_color.g; t.b=v.edge_color.b;"
+                    },
+                    {
+                        // +X+Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox+t.x; v.y = t.oy+t.y; v.z = t.oz; v.dir_z=1; v.size_x=t.z; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // +X-Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox+t.x; v.y = t.oy-t.y; v.z = t.oz; v.dir_z=1; v.size_x=t.z; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // +X+Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox+t.x; v.y = t.oy; v.z = t.oz+t.z; v.dir_y=1; v.size_x=t.y; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // +X-Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox+t.x; v.y = t.oy; v.z = t.oz-t.z; v.dir_y=1; v.size_x=t.y; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -X+Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox-t.x; v.y = t.oy+t.y; v.z = t.oz; v.dir_z=1; v.size_x=t.z; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -X-Y
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=0; v.g=0; v.b=1; v.x = t.ox-t.x; v.y = t.oy-t.y; v.z = t.oz; v.dir_z=1; v.size_x=t.z; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -X+Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox-t.x; v.y = t.oy; v.z = t.oz+t.z; v.dir_y=1; v.size_x=t.y; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -X-Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=0; v.g=1; v.b=0; v.x = t.ox-t.x; v.y = t.oy; v.z = t.oz-t.z; v.dir_y=1; v.size_x=t.y; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // +Y+Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox; v.y = t.oy+t.y; v.z = t.oz+t.z; v.dir_x=1; v.size_x=t.x; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // +Y-Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox; v.y = t.oy+t.y; v.z = t.oz-t.z; v.dir_x=1; v.size_x=t.x; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -Y+Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=t.r; v.g=t.g; v.b=t.b; v.x = t.ox; v.y = t.oy-t.y; v.z = t.oz+t.z; v.dir_x=1; v.size_x=t.x; v.size_y=t.w;"
+                        }
+                    },
+                    {
+                        // -Y-Z
+                        "particle_effect": {
+                            "effect": "wedit:selection_edge",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.r=1; v.g=0; v.b=0; v.x = t.ox; v.y = t.oy-t.y; v.z = t.oz-t.z; v.dir_x=1; v.size_x=t.x; v.size_y=t.w;"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

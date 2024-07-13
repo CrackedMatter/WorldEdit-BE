@@ -1,0 +1,68 @@
+{
+    "format_version": "1.10.0",
+    "particle_effect": {
+        "description": {
+            "identifier": "wedit:wireframe_sphere",
+            "basic_render_parameters": {
+                "material": "particles_opaque",
+                "texture": "textures/particle/white"
+            }
+        },
+        "components": {
+            "minecraft:emitter_initialization": {
+                "creation_expression": "v.radius = v.radius??1.5; v.resolution_vertical = 7; v.resolution_horizontal = 16; v.default_xyz.x = 0; v.default_xyz.y = 0; v.default_xyz.z = 0; v.offset = v.offset??v.default_xyz;"
+            },
+            "minecraft:emitter_rate_instant": {
+                "num_particles": 1
+            },
+            "minecraft:emitter_lifetime_expression": {
+                "max_lifetime": 0
+            },
+            "minecraft:particle_lifetime_expression": {
+                "expiration_expression": "v.expire ?? 0"
+            },
+            "minecraft:particle_appearance_billboard": {
+                "size": [
+                    0,
+                    0
+                ]
+            },
+            "minecraft:particle_lifetime_events": {
+                "timeline": {
+                    "0": [
+                        "emit",
+                        "END"
+                    ]
+                }
+            }
+        },
+        "events": {
+            // This event should trigger last.
+            "END": {
+                "expression": "v.expire = 1;"
+            },
+            // Timeline events.
+            "emit": {
+                "sequence": [
+                    {
+                        "expression": "t.r=v.radius; t.w=math.lerp(0.5/32, 2/32, (t.r-0.5)/(12.5-0.5)); t.blend=math.min(t.r/5, 1); t.vert=v.resolution_vertical; t.horiz=v.resolution_horizontal; t.vert=math.min(math.ceil(t.blend*(t.vert-1)/2)*2+1, t.vert); t.horiz=math.min((math.ceil(t.blend*(t.horiz/4-1))+1)*4, t.horiz); t.offset=v.offset;"
+                    },
+                    {
+                        "particle_effect": {
+                            "effect": "wedit:wireframe_circle_horizontal",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.radius = t.r; v.resolution_vertical = t.vert; v.resolution_horizontal = t.horiz; v.line_width = t.w; v.offset=t.offset;"
+                        }
+                    },
+                    {
+                        "particle_effect": {
+                            "effect": "wedit:wireframe_circle_vertical",
+                            "type": "emitter",
+                            "pre_effect_expression": "v.radius = t.r; v.resolution_vertical = t.vert+1; v.resolution_horizontal = t.horiz; v.line_width = t.w; v.offset=t.offset;"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

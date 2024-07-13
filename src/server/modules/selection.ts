@@ -1,10 +1,10 @@
-import { regionBounds, regionVolume, Vector } from "@notbeer-api";
-import { Player, system } from "@minecraft/server";
+import { regionBounds, regionSize, regionVolume, Vector } from "@notbeer-api";
+import { MolangVariableMap, Player, system } from "@minecraft/server";
 import { Shape, shapeGenOptions } from "../shapes/base_shape.js";
 import { SphereShape } from "../shapes/sphere.js";
 import { CuboidShape } from "../shapes/cuboid.js";
 import { CylinderShape } from "../shapes/cylinder.js";
-import { arraysEqual, getWorldHeightLimits } from "../util.js";
+import { getWorldHeightLimits } from "../util.js";
 import config from "config.js";
 
 // TODO: Add other selection modes
@@ -85,7 +85,7 @@ export class Selection {
      * @returns
      */
     public getShape(): [Shape, Vector] {
-        if (!this.isValid()) return null;
+        if (!this.isValid()) return undefined;
 
         if (this.isCuboid()) {
             const [start, end] = regionBounds(this._points);
@@ -158,24 +158,23 @@ export class Selection {
 
     public draw(): void {
         if (!this._visible) return;
-        if (system.currentTick > this.lastDraw + drawFrequency) {
-            if (this._mode != this.modeLastDraw || !arraysEqual(this._points, this.pointsLastDraw, (a, b) => a.equals(b))) {
-                this.drawParticles.length = 0;
-                if (this.isValid()) {
-                    const [shape, loc] = this.getShape();
-                    this.drawParticles.push(...shape.getOutline(loc));
-                }
-                this.modeLastDraw = this._mode;
-                this.pointsLastDraw = this.points;
-            }
-
+        if (system.currentTick >= this.lastDraw + drawFrequency) {
+            const dimension = this.player.dimension;
             try {
-                for (const [id, loc] of this.drawParticles) {
-                    try {
-                        this.player.spawnParticle(id, loc);
-                    } catch {
-                        /* pass */
-                    }
+                const [shape, shapeLoc] = this.getShape();
+                if (shape instanceof CuboidShape) {
+                    const [min, max] = this.getRange()!;
+                    const size = regionSize(min, max);
+                    const spawnAt = Vector.add(this.player.getHeadLocation(), Vector.from(this.player.getViewDirection()).mul(20));
+                    spawnAt.y = Math.min(Math.max(spawnAt.y, dimension.heightRange.min), dimension.heightRange.max);
+                    const molangVars = new MolangVariableMap();
+                    molangVars.setFloat("alpha_selection", 0.2);
+                    molangVars.setFloat("alpha_background", 0.3);
+                    molangVars.setVector3("offset", Vector.sub(min, spawnAt).add(size.mul(0.5)));
+                    molangVars.setVector3("size", size);
+                    this.player.spawnParticle("wedit:selection", spawnAt, molangVars);
+                } else {
+                    shape?.draw(shapeLoc, this.player, false);
                 }
             } catch {
                 /* pass */

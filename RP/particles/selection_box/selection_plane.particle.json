@@ -1,0 +1,72 @@
+{
+    "format_version": "1.10.0",
+    "particle_effect": {
+        "description": {
+            "identifier": "wedit:selection_plane",
+            "basic_render_parameters": {
+                "material": "wedit_particles_blend_culled",
+                "texture": "textures/particle/white"
+            }
+        },
+        "components": {
+            // Reminder: formula for computing alpha of second element for overlapping blending elements (mix(mix(bg, clr, a1), clr, a2) = mix(bg, clr, a)) : a2=(a1-a)/(a1-1)
+            // Summon every 20*(v.stay_duration+v.ease_duration) ticks
+            "minecraft:emitter_initialization": {
+                "creation_expression": "v.countdown = 3; v.stay_duration = 0; v.ease_duration = 8/20; v.r = v.r??1; v.g = v.g??1; v.b = v.b??1; v.a = v.a??0.5; v.x=v.x??0; v.y=v.y??0; v.z=v.z??0; v.dir_x=v.dir_x??0; v.dir_y=v.dir_y??0; v.dir_z=v.dir_z??0; v.size_x = v.size_x??1; v.size_y = v.size_y??1;",
+                "per_update_expression": "v.countdown ? {v.countdown = v.countdown-1; !v.countdown ? { v.ease_delay = v.emitter_age; v.lifetime = v.stay_duration+v.ease_duration*2; }; };"
+            },
+            "minecraft:emitter_rate_instant": {
+                "num_particles": 1
+            },
+            "minecraft:emitter_lifetime_once": {
+                "active_time": 0
+            },
+            "minecraft:particle_lifetime_expression": {
+                "expiration_expression": "!v.countdown && v.particle_age > v.lifetime"
+            },
+            "minecraft:particle_motion_parametric": {
+                "relative_position": [
+                    "v.particle_age?v.x",
+                    "v.particle_age?v.y",
+                    "v.particle_age?v.z"
+                ]
+            },
+            "minecraft:particle_appearance_billboard": {
+                "size": [
+                    "v.size_x",
+                    "v.size_y"
+                ],
+                "facing_camera_mode": "direction_z",
+                "direction": {
+                    "mode": "custom",
+                    "custom_direction": [
+                        "v.dir_x",
+                        "v.dir_y",
+                        "v.dir_z"
+                    ]
+                },
+                "uv": {
+                    "texture_width": 1,
+                    "texture_height": 1,
+                    "uv": [
+                        0,
+                        0
+                    ],
+                    "uv_size": [
+                        1,
+                        1
+                    ]
+                }
+            },
+            "minecraft:particle_appearance_tinting": {
+                "color": [
+                    "v.r",
+                    "v.g",
+                    "v.b",
+                    // Wait v.ease_delay, then ease in during v.ease_duration using special formula, which makes current + previous element alpha equal to v.a, then stay at v.a during v.stay_duration, then ease out using hermite blend during v.ease_duration.
+                    "v.countdown ? {return 0;}; t.a = v.a*math.hermite_blend(1-math.clamp((v.particle_age-v.ease_delay)/v.ease_duration, 0, 1)); t.a=(t.a-v.a)/(t.a-1); t.o = v.ease_delay + v.ease_duration + v.stay_duration; return v.particle_age>t.o?v.a*math.hermite_blend(1 - math.clamp((v.particle_age-t.o)/v.ease_duration, 0, 1)):t.a;"
+                ]
+            }
+        }
+    }
+}

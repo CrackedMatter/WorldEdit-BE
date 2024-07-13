@@ -32,10 +32,8 @@ export class TorusShape extends Shape {
         throw Error("YRange not implemented");
     }
 
-    public getOutline(loc: Vector) {
-        loc = loc.ceil();
-        const maxRadius = this.outerRadius + 0.5;
-        return this.drawCircle(loc.sub([0, 0.5, 0]), maxRadius, "y");
+    public draw() {
+        throw Error("Cannot draw torus shape");
     }
 
     protected prepGeneration(genVars: shapeGenVars, options?: shapeGenOptions) {

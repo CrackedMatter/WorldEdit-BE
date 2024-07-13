@@ -1,3 +1,4 @@
+import { MolangVariableMap, Player } from "@minecraft/server";
 import { Shape, shapeGenOptions, shapeGenVars } from "./base_shape.js";
 import { Vector } from "@notbeer-api";
 
@@ -19,25 +20,19 @@ export class PyramidShape extends Shape {
         throw new Error("getYRange not implemented!");
     }
 
-    public getOutline(loc: Vector) {
-        const vertices = [
-            loc.add([-this.size + 1, 0, -this.size + 1]),
-            loc.add([-this.size + 1, 0, this.size]),
-            loc.add([this.size, 0, -this.size + 1]),
-            loc.add([this.size, 0, this.size]),
-            loc.add([0.5, this.size, 0.5]),
-        ];
-        const edges: [number, number][] = [
-            [0, 1],
-            [1, 3],
-            [2, 0],
-            [3, 2],
-            [0, 4],
-            [1, 4],
-            [2, 4],
-            [3, 4],
-        ];
-        return this.drawShape(vertices, edges);
+    public draw(loc: Vector, player: Player, global?: boolean): void {
+        const dimension = player.dimension;
+        try {
+            loc = loc.add(0.5);
+            const spawnAt = Vector.add(player.getHeadLocation(), Vector.from(player.getViewDirection()).mul(20));
+            spawnAt.y = Math.min(Math.max(spawnAt.y, dimension.heightRange.min), dimension.heightRange.max);
+            const molangVars = new MolangVariableMap();
+            molangVars.setVector3("offset", Vector.sub(loc, spawnAt));
+            molangVars.setFloat("size", this.size);
+            (global ? dimension : player).spawnParticle("wedit:wireframe_pyramid", spawnAt, molangVars);
+        } catch {
+            /* pass */
+        }
     }
 
     protected prepGeneration(genVars: shapeGenVars, options?: shapeGenOptions) {

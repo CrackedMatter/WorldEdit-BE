@@ -1,23 +1,15 @@
-import { Player, Vector3, system } from "@minecraft/server";
+import { MolangVariableMap, Player } from "@minecraft/server";
 import { PlayerUtil } from "@modules/player_util";
 import { RawText, Server, Vector, regionBounds } from "@notbeer-api";
 import { generateLine } from "server/commands/region/line";
 import { PlayerSession } from "server/sessions";
 import { Tool } from "./base_tool";
 import { Tools } from "./tool_manager";
-import { print, snap } from "server/util";
+import { print } from "server/util";
 import { Jobs } from "@modules/jobs";
 import { SphereShape } from "server/shapes/sphere";
 import { CylinderShape } from "server/shapes/cylinder";
 import { PyramidShape } from "server/shapes/pyramid";
-
-function trySpawnParticle(player: Player, type: string, location: Vector3) {
-    try {
-        player.spawnParticle(type, location);
-    } catch {
-        /* pass */
-    }
-}
 
 abstract class GeneratorTool extends Tool {
     protected posStart = new Map<PlayerSession, [Vector, string]>(); // [location, dimension type]
@@ -37,7 +29,7 @@ abstract class GeneratorTool extends Tool {
     }
 
     protected baseTick(player: Player, session: PlayerSession) {
-        if (system.currentTick % 5 !== 0 || !this.posStart.has(session) || !session.drawOutlines || this.posStart.get(session)[1] !== player.dimension.id) {
+        if (!this.posStart.has(session) || !session.drawOutlines || this.posStart.get(session)[1] !== player.dimension.id) {
             return true;
         }
 
@@ -116,23 +108,17 @@ class DrawLineTool extends GeneratorTool {
         let lineStart = self.getFirstPos(session);
         const lineEnd = self.traceForPos(player);
         const length = lineEnd.sub(lineStart).length;
-        if (length > 32) {
-            lineStart = lineEnd.add(lineStart.sub(lineEnd).normalized().mul(32)).floor();
+        if (length > 64) {
+            lineStart = lineEnd.add(lineStart.sub(lineEnd).normalized().mul(64)).floor();
         }
 
-        const genLine = generateLine(lineStart, lineEnd);
-        let val: IteratorResult<void, Vector3[]>;
-        while (!val?.done) val = genLine.next();
-        val.value.forEach((p) => {
-            trySpawnParticle(player, "wedit:selection_draw", p);
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [1, 0, 0]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [0, 1, 0]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [1, 1, 0]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [0, 0, 1]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [1, 0, 1]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [0, 1, 1]));
-            trySpawnParticle(player, "wedit:selection_draw", Vector.add(p, [1, 1, 1]));
-        });
+        try {
+            const molangVars = new MolangVariableMap();
+            molangVars.setVector3("point", Vector.sub(lineEnd, lineStart));
+            player.spawnParticle("wedit:line_selection", lineStart.add(0.5), molangVars);
+        } catch {
+            /* pass */
+        }
     };
 
     useOn = this.commonUse;
@@ -146,38 +132,26 @@ class DrawSphereTool extends GeneratorTool {
     commonUse = function* (self: DrawSphereTool, player: Player, session: PlayerSession, loc?: Vector) {
         if (self.baseUse(player, session, loc)) return;
 
-        const center = self.getFirstPos(session);
-        const radius = Math.floor(self.traceForPos(player).sub(center).length);
-        const sphereShape = new SphereShape(radius);
+        const [shape, center] = self.getShape(player, session);
         const pattern = session.globalPattern;
-        pattern.setContext(session, sphereShape.getRegion(center));
+        pattern.setContext(session, shape.getRegion(center));
         self.clearFirstPos(session);
 
-        const count = yield* Jobs.run(session, 2, sphereShape.generate(center, pattern, null, session));
+        const count = yield* Jobs.run(session, 2, shape.generate(center, pattern, null, session));
         print(RawText.translate("commands.blocks.wedit:created").with(`${count}`), player, true);
     };
 
     tick = function (self: DrawSphereTool, player: Player, session: PlayerSession) {
         if (self.baseTick(player, session)) return;
-
-        const center = self.getFirstPos(session);
-        const radius = Math.floor(center.sub(self.traceForPos(player)).length) + 0.5;
-
-        const axes: [typeof Vector.prototype.rotateX, Vector][] = [
-            [Vector.prototype.rotateX, new Vector(0, 1, 0)],
-            [Vector.prototype.rotateY, new Vector(1, 0, 0)],
-            [Vector.prototype.rotateZ, new Vector(0, 1, 0)],
-        ];
-        const resolution = snap(Math.min(radius * 2 * Math.PI, 36), 4);
-
-        for (const [rotateBy, vec] of axes) {
-            for (let i = 0; i < resolution; i++) {
-                let point: Vector = rotateBy.call(vec, (i / resolution) * 360);
-                point = point.mul(radius).add(center).add(0.5);
-                trySpawnParticle(player, "wedit:selection_draw", point);
-            }
-        }
+        const [shape, loc] = self.getShape(player, session);
+        shape.draw(loc, player);
     };
+
+    getShape(player: Player, session: PlayerSession): [SphereShape, Vector] {
+        const center = this.getFirstPos(session)!;
+        const radius = Math.floor(this.traceForPos(player).sub(center).length);
+        return [new SphereShape(radius), center];
+    }
 
     useOn = this.commonUse;
     use = this.commonUse;
@@ -202,11 +176,8 @@ class DrawCylinderTool extends GeneratorTool {
 
     tick = function (self: DrawCylinderTool, player: Player, session: PlayerSession) {
         if (self.baseTick(player, session)) return;
-
         const [shape, loc] = self.getShape(player, session);
-        for (const particle of shape.getOutline(loc)) {
-            trySpawnParticle(player, ...particle);
-        }
+        shape.draw(loc, player);
     };
 
     getShape(player: Player, session: PlayerSession): [CylinderShape, Vector] {
@@ -218,7 +189,7 @@ class DrawCylinderTool extends GeneratorTool {
             center.y += height;
             height = -height + 1;
         }
-        return [new CylinderShape(height, radius), center];
+        return [new CylinderShape(height * 2, radius), center];
     }
 
     useOn = this.commonUse;
@@ -246,9 +217,7 @@ class DrawPyramidTool extends GeneratorTool {
         if (self.baseTick(player, session)) return;
 
         const [shape, loc] = self.getShape(player, session);
-        for (const particle of shape.getOutline(loc)) {
-            trySpawnParticle(player, ...particle);
-        }
+        shape.draw(loc, player);
     };
 
     getShape(player: Player, session: PlayerSession): [PyramidShape, Vector] {
