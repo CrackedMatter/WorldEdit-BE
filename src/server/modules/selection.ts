@@ -16,13 +16,9 @@ const drawFrequency = 8; // in ticks
 export class Selection {
     private _mode: selectMode = "cuboid";
     private _points: Vector[] = [];
-    private _visible: boolean = config.drawOutlines;
-
-    private modeLastDraw: selectMode = this._mode;
-    private pointsLastDraw: Vector[] = [];
+    private _visible: boolean | "local" = config.drawOutlines;
 
     private player: Player;
-    private drawParticles: [string, Vector][] = [];
     private lastDraw = 0;
 
     constructor(player: Player) {
@@ -174,7 +170,7 @@ export class Selection {
                     molangVars.setVector3("size", size);
                     this.player.spawnParticle("wedit:selection", spawnAt, molangVars);
                 } else {
-                    shape?.draw(shapeLoc, this.player, false);
+                    shape?.draw(shapeLoc, this.player, this._visible !== "local");
                 }
             } catch {
                 /* pass */
@@ -206,11 +202,11 @@ export class Selection {
         return this._points.map((v) => v.clone());
     }
 
-    public get visible(): boolean {
+    public get visible(): boolean | "local" {
         return this._visible;
     }
 
-    public set visible(value: boolean) {
+    public set visible(value: boolean | "local") {
         this._visible = value;
     }
 }
